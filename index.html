@@ -63,7 +63,7 @@
   <!-- Dynamic Student Watermark Layer -->
   <div id="watermark-layer" class="hidden" aria-hidden="true"></div>
 
-  <!-- Anti-Screenshot / Tab-Switch Blur Shield -->
+  <!-- Anti-Screenshot / Security Blur Shield -->
   <div id="privacy-shield" class="fixed inset-0 z-50 hidden bg-slate-950/95 text-white flex flex-col items-center justify-center p-6 text-center">
     <div class="max-w-lg bg-slate-900 border border-rose-500/60 rounded-2xl p-8 shadow-2xl">
       <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center">
@@ -73,7 +73,7 @@
       </div>
       <h2 class="text-2xl font-bold text-rose-400 mb-2">Security Shield Activated</h2>
       <p id="shield-reason" class="text-slate-300 text-sm mb-4 leading-relaxed">
-        Screen capture attempt, window focus loss, or restricted shortcut detected. Content is hidden to protect academic integrity.
+        Screen capture attempt or restricted shortcut detected. Content is hidden to protect academic integrity.
       </p>
       <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-6 text-xs text-slate-400">
         Logged Security Events: <span id="shield-count" class="text-rose-400 font-bold">1</span>
@@ -245,7 +245,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
             <div>
-              <span class="font-bold text-amber-300">Academic Integrity Enforcement:</span> Copy, cut, paste, right-click, developer tools, and screenshots are strictly disabled. Perform all coding directly on your local computer and type your README answers manually.
+              <span class="font-bold text-amber-300">Academic Integrity Enforcement:</span> Copy, cut, paste, right-click, and screenshots are disabled inside this app. You may freely switch windows to use your local code editor and terminal, and type your README answers manually.
             </div>
           </div>
 
@@ -1262,12 +1262,6 @@ console.log(enrollmentMessage);</pre>
     document.addEventListener("keyup", e => {
       if (e.key === "PrintScreen" || e.keyCode === 44) {
         triggerSecurityShield("PrintScreen capture attempt detected and logged.");
-      }
-    });
-
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden && appState.authenticated) {
-        triggerSecurityShield("Tab switch or external capture overlay detected.");
       }
     });
 
