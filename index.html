@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IPT101 Laboratory: Modular JavaScript Student Profile with Git &amp; GitHub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    code, pre, textarea.code-input, input.code-input {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    input, textarea, select {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+    }
+
+    @media print {
+      body {
+        display: none !important;
+      }
+    }
+
+    /* Dynamic Student Watermark Layer */
+    #watermark-layer {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      overflow: hidden;
+      opacity: 0.05;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      align-content: space-around;
+      gap: 3rem;
+      transform: rotate(-22deg) scale(1.25);
+    }
+
+    /* Security Blur Shield */
+    #privacy-shield {
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+
+  <!-- Dynamic Student Watermark Layer -->
+  <div id="watermark-layer" class="hidden" aria-hidden="true"></div>
+
+  <!-- Anti-Screenshot / Tab-Switch Blur Shield -->
+  <div id="privacy-shield" class="fixed inset-0 z-50 hidden bg-slate-950/95 text-white flex flex-col items-center justify-center p-6 text-center">
+    <div class="max-w-lg bg-slate-900 border border-rose-500/60 rounded-2xl p-8 shadow-2xl">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <h2 class="text-2xl font-bold text-rose-400 mb-2">Security Shield Activated</h2>
+      <p id="shield-reason" class="text-slate-300 text-sm mb-4 leading-relaxed">
+        Screen capture attempt, window focus loss, or restricted shortcut detected. Content is hidden to protect academic integrity.
+      </p>
+      <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-6 text-xs text-slate-400">
+        Logged Security Events: <span id="shield-count" class="text-rose-400 font-bold">1</span>
+      </div>
+      <button onclick="dismissPrivacyShield()" class="w-full py-3 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition shadow-lg">
+        Acknowledge &amp; Resume Laboratory
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Toast Banner -->
+  <div id="toast-banner" class="fixed bottom-5 right-5 z-50 hidden max-w-sm bg-slate-900 text-white border border-amber-500/60 px-4 py-3 rounded-xl shadow-2xl flex items-start gap-3">
+    <span class="text-amber-400 mt-0.5">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    </span>
+    <div class="text-xs leading-relaxed">
+      <p class="font-semibold text-amber-300" id="toast-title">Action Restricted</p>
+      <p class="text-slate-300" id="toast-msg">Copy, paste, and screenshots are disabled during this laboratory.</p>
+    </div>
+  </div>
+
+  <!-- Official Laboratory Completion Receipt Modal -->
+  <div id="receipt-modal" class="fixed inset-0 z-50 hidden bg-slate-950/85 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-indigo-500/40 rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">IPT101 Official Verification Record</span>
+          <h3 class="text-xl font-extrabold text-white">Laboratory Completion Receipt</h3>
+        </div>
+        <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg bg-slate-800">✕</button>
+      </div>
+      <div id="receipt-modal-body" class="space-y-4 text-xs text-slate-300"></div>
+      <div class="flex justify-end gap-3 pt-2 border-t border-slate-800">
+        <button onclick="closeReceiptModal()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">
+          Close Receipt
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APPLICATION HEADER -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-20 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-extrabold text-white text-base shadow-inner shrink-0">
+          JS
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              IPT101
+            </span>
+            <span class="text-xs text-slate-400">Integrative Programming &amp; Technologies 1</span>
+          </div>
+          <h1 class="text-sm sm:text-base font-bold text-white">
+            Modular JavaScript Student Profile with Git &amp; GitHub
+          </h1>
+        </div>
+      </div>
+
+      <!-- Live Real-Time Clock Display -->
+      <div class="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 flex items-center gap-3">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div>
+          <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+            Live System Real-Time Clock
+          </div>
+          <div id="live-clock-display" class="font-mono text-xs sm:text-sm font-bold text-slate-100">
+            Synchronizing clock...
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 sm:py-8">
+
+    <!-- =====================================================================
+         VIEW 1: STUDENT AUTHENTICATION GATEKEEPER
+    ====================================================================== -->
+    <section id="auth-view" class="max-w-3xl mx-auto space-y-6">
+      <div class="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 p-6 sm:p-8 border-b border-slate-800">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-indigo-200 text-xs font-semibold mb-3">
+            <span>IPT101 Official Roster &amp; Schedule Gatekeeper</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+            Student Identity &amp; Laboratory Section Verification
+          </h2>
+          <p class="text-indigo-200/90 text-xs sm:text-sm leading-relaxed">
+            Enter your exact registered Google Classroom Last Name, First Name, Middle Initial, Student ID Number, and Laboratory Section. Unregistered names or out-of-schedule access attempts automatically lock the laboratory portal.
+          </p>
+        </div>
+
+        <form id="login-form" onsubmit="handleStudentLogin(event)" class="p-6 sm:p-8 space-y-5">
+          <!-- Schedule Windows Info -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-indigo-400 uppercase">Laboratory Section A</span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">TTH</span>
+              </div>
+              <p class="text-sm font-bold text-white">7:30 AM – 8:30 AM</p>
+              <p class="text-xs text-amber-400 font-medium mt-0.5">Extension until 9:00 AM (Nov 24, 2026)</p>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-indigo-400 uppercase">Laboratory Section B</span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">TTH</span>
+              </div>
+              <p class="text-sm font-bold text-white">8:30 AM – 9:30 AM</p>
+              <p class="text-xs text-amber-400 font-medium mt-0.5">Extension until 10:00 AM (Nov 24, 2026)</p>
+            </div>
+          </div>
+
+          <!-- Name Fields -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div class="sm:col-span-5">
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                Last Name <span class="text-rose-400">*</span>
+              </label>
+              <input type="text" id="input-lastname" required placeholder="e.g., Bier"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none text-sm font-medium" />
+            </div>
+            <div class="sm:col-span-5">
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                First Name <span class="text-rose-400">*</span>
+              </label>
+              <input type="text" id="input-firstname" required placeholder="e.g., Margarette"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none text-sm font-medium" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                M.I.
+              </label>
+              <input type="text" id="input-mi" maxlength="4" placeholder="e.g., F."
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none text-sm font-medium text-center" />
+            </div>
+          </div>
+
+          <!-- ID Number & Lab Section -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                Student ID Number <span class="text-rose-400">*</span>
+              </label>
+              <input type="text" id="input-idnumber" required placeholder="e.g., 2024-1001"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-emerald-300 font-mono focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none text-sm font-medium" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                Laboratory Section <span class="text-rose-400">*</span>
+              </label>
+              <select id="input-section" required
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none text-sm font-semibold">
+                <option value="">-- Select Assigned Section --</option>
+                <option value="Lab A">Lab A (TTH 7:30 AM – 8:30 AM | Ext. 9:00 AM)</option>
+                <option value="Lab B">Lab B (TTH 8:30 AM – 9:30 AM | Ext. 10:00 AM)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Academic Integrity Notice -->
+          <div class="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-xs text-amber-200 flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <div>
+              <span class="font-bold text-amber-300">Academic Integrity Enforcement:</span> Copy, cut, paste, right-click, developer tools, and screenshots are strictly disabled. Perform all coding directly on your local computer and type your README answers manually.
+            </div>
+          </div>
+
+          <button type="submit"
+            class="w-full py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2">
+            <span>Verify Enrollment &amp; Launch Laboratory</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VIEW 2: LOCKOUT / DISABLED SCREEN
+    ====================================================================== -->
+    <section id="lockout-view" class="hidden max-w-xl mx-auto">
+      <div class="bg-slate-900 rounded-2xl shadow-2xl border-2 border-rose-500/50 overflow-hidden text-center">
+        <div class="bg-rose-600 p-6 text-white">
+          <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-white/15 flex items-center justify-center">
+            <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+          </div>
+          <span id="lockout-badge" class="inline-block px-3 py-1 rounded-full bg-rose-950/70 text-rose-100 text-xs font-bold uppercase tracking-wider mb-2">
+            Application Disabled
+          </span>
+          <h2 id="lockout-title" class="text-2xl font-extrabold">Access Denied</h2>
+        </div>
+
+        <div class="p-6 sm:p-8 space-y-5">
+          <p id="lockout-message" class="text-sm text-slate-300 leading-relaxed">
+            This laboratory application has been disabled.
+          </p>
+
+          <div id="lockout-details" class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-left text-xs space-y-1.5 font-mono text-slate-300">
+          </div>
+
+          <div class="pt-2">
+            <button onclick="resetToLogin()"
+              class="w-full py-3 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold text-sm transition">
+              Return to Student Verification Form
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         VIEW 3: ACTIVE LABORATORY WORKSPACE (6 PAGES — ONE PAGE PER LESSON)
+    ====================================================================== -->
+    <section id="lab-workspace" class="hidden space-y-6">
+
+      <!-- Student Session & Schedule Window Bar -->
+      <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 shadow-lg">
+        <div class="flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 font-extrabold flex items-center justify-center text-base shrink-0" id="student-avatar">
+            ST
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="text-base font-bold text-white" id="display-student-name">Student Name</h2>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30" id="display-student-section">
+                Lab A
+              </span>
+              <span id="window-status-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Regular Window Active
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">
+              ID: <span class="font-mono font-semibold text-slate-200" id="display-student-id">0000</span>
+              <span class="mx-2">•</span>
+              Schedule: <span class="text-slate-300" id="display-window-info">Nov 24, 2026</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3 border-t lg:border-t-0 pt-3 lg:pt-0 border-slate-800">
+          <div class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+            <span class="text-slate-400">Remaining:</span>
+            <span class="font-mono font-bold text-emerald-400 ml-1" id="window-countdown">--:--:--</span>
+          </div>
+          <div class="px-3 py-1.5 rounded-xl bg-rose-950/50 border border-rose-500/30 text-xs">
+            <span class="text-rose-300">Security Alerts:</span>
+            <span class="font-mono font-bold text-rose-400 ml-1" id="header-violation-count">0</span>
+          </div>
+          <button onclick="resetToLogin()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition">
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- Persistent Laboratory Title & Objective Card (Shown on EVERY Lesson Page) -->
+      <div class="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 rounded-2xl p-5 sm:p-6 shadow-lg border border-indigo-500/30">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+          <span class="text-xs font-bold uppercase tracking-widest text-indigo-400">
+            IPT101 Laboratory Exercise • Title &amp; Objective
+          </span>
+          <span class="text-xs font-mono font-bold px-2.5 py-0.5 rounded bg-indigo-500/20 text-indigo-200 self-start" id="page-indicator-badge">
+            Page 1 of 6
+          </span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight mb-3">
+          Modular JavaScript Student Profile with Git &amp; GitHub
+        </h2>
+        <div class="bg-slate-950/70 rounded-xl p-4 border border-slate-800">
+          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <span class="font-bold text-indigo-300 uppercase tracking-wider text-xs mr-1.5">Objective:</span>
+            Students will build a modular student record system using core JavaScript features—structuring their personal profile as an object (<code class="text-amber-300">id</code>, <code class="text-amber-300">name</code>, <code class="text-amber-300">program</code>, <code class="text-amber-300">yearLevel</code>, <code class="text-amber-300">schoolYear</code>), implementing functions with parameters, object methods with arguments, and ES6 modules—while practicing version control by organizing, documenting, and pushing their work into a dedicated subfolder within their Main GitHub Repository.
+          </p>
+        </div>
+      </div>
+
+      <!-- 6-Page Step Navigation Bar -->
+      <div class="bg-slate-900 rounded-2xl border border-slate-800 p-3 overflow-x-auto">
+        <div class="grid grid-cols-6 min-w-[680px] gap-2" id="step-nav-container"></div>
+      </div>
+
+      <!-- =================================================================
+           PAGE 1: PART 1 — REPOSITORY & ENVIRONMENT SETUP
+      ================================================================== -->
+      <div id="lesson-page-1" class="lesson-page space-y-6">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 sm:p-8 space-y-6">
+          <div class="border-b border-slate-800 pb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Part 1 of 4</span>
+            <h3 class="text-xl sm:text-2xl font-extrabold text-white mt-1">
+              Repository &amp; Environment Setup
+            </h3>
+            <p class="text-sm text-slate-400 mt-1">
+              Navigate to your existing local Main Repository on your computer and create the required subfolder with ES6 module support enabled.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="space-y-3">
+              <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-xs font-bold">1</span>
+                Target Directory Structure (7 Required Files)
+              </h4>
+              <pre class="bg-slate-950 text-slate-200 p-4 rounded-xl text-xs leading-relaxed overflow-x-auto border border-slate-800">your-main-repository/
+└── Modular JavaScript Student Profile/
+    ├── package.json
+    ├── profileBuilder.js
+    ├── studentDirectory.js
+    ├── studentModule.js
+    ├── mainApp.js
+    ├── README.md
+    └── package-json-screenshot.png</pre>
+            </div>
+
+            <div class="space-y-3">
+              <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-xs font-bold">2</span>
+                Initialize Subfolder &amp; <code class="text-indigo-300">package.json</code>
+              </h4>
+              <pre class="bg-slate-950 text-emerald-300 p-4 rounded-xl text-xs leading-relaxed overflow-x-auto border border-slate-800"><span class="text-slate-500"># 1. Sync with your main repository</span>
+git pull origin main
+
+<span class="text-slate-500"># 2. Create and enter the required subfolder</span>
+mkdir "Modular JavaScript Student Profile"
+cd "Modular JavaScript Student Profile"
+
+<span class="text-slate-500"># 3. Initialize package.json and enable ES6 modules</span>
+npm init -y
+npm pkg set type="module"</pre>
+            </div>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-3">
+            <h4 class="text-sm font-bold text-indigo-300">Part 1 Setup Verification Checklist</h4>
+            <div class="space-y-2.5 text-xs text-slate-300">
+              <label class="flex items-center gap-3 p-3 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer hover:border-indigo-500/40">
+                <input type="checkbox" class="setup-check w-4 h-4 rounded accent-indigo-600" onchange="updateProgress()" />
+                <span>Synced local Main Repository via <code class="text-emerald-300">git pull origin main</code>.</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer hover:border-indigo-500/40">
+                <input type="checkbox" class="setup-check w-4 h-4 rounded accent-indigo-600" onchange="updateProgress()" />
+                <span>Created folder <code class="text-emerald-300">Modular JavaScript Student Profile</code> and navigated into it.</span>
+              </label>
+              <label class="flex items-center gap-3 p-3 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer hover:border-indigo-500/40">
+                <input type="checkbox" class="setup-check w-4 h-4 rounded accent-indigo-600" onchange="updateProgress()" />
+                <span>Generated <code class="text-emerald-300">package.json</code> with <code class="text-emerald-300">"type": "module"</code>.</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================
+           PAGE 2: PART 2, LESSON 1 — FUNCTIONS & PARAMETERS (profileBuilder.js)
+      ================================================================== -->
+      <div id="lesson-page-2" class="lesson-page hidden space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
+          <div class="border-b border-slate-100 pb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Part 2 — Laboratory Coding Task • Lesson 1</span>
+            <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
+              Lesson 1: Functions &amp; Parameters (<code class="text-indigo-700">profileBuilder.js</code>)
+            </h3>
+            <p class="text-sm text-slate-600 mt-1">
+              Note: Replace all placeholder values (<code class="text-rose-600">"Your Full Name"</code>, <code class="text-rose-600">0000</code>, <code class="text-rose-600">"Your Program"</code>, etc.) with your actual student details in every file on your local computer.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left: Static Step-by-Step Instructions & Local Checklist -->
+            <div class="space-y-4">
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-2.5 text-xs text-slate-700">
+                <h4 class="font-bold text-slate-900 text-sm">Local Workstation Instructions:</h4>
+                <ul class="list-disc pl-5 space-y-1.5">
+                  <li>Open your local code editor inside the <code>Modular JavaScript Student Profile</code> subfolder.</li>
+                  <li>Create <code>profileBuilder.js</code>.</li>
+                  <li>Define <code>createStudentProfile(name, id, program, yearLevel, schoolYear)</code> to construct and return an object containing those parameters as key-value pairs.</li>
+                  <li>Call the function using your personal details as arguments and log the returned object.</li>
+                  <li>Test in your local terminal: <code class="px-1.5 py-0.5 rounded bg-slate-200 text-slate-900 font-semibold">node profileBuilder.js</code></li>
+                </ul>
+              </div>
+
+              <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-5 space-y-3">
+                <h4 class="text-sm font-bold text-indigo-950">Local Completion Verification</h4>
+                <p class="text-xs text-indigo-800">Perform this task on your computer, then check the box below once verified in your terminal:</p>
+                <label class="flex items-start gap-3 p-3 rounded-lg bg-white border border-indigo-100 cursor-pointer text-xs font-medium text-slate-800">
+                  <input type="checkbox" id="check-lesson1" class="w-4 h-4 mt-0.5 rounded text-indigo-600" onchange="toggleLessonCheck(1, this.checked)" />
+                  <span>I have created <code>profileBuilder.js</code> on my computer with my actual student details and verified the output using <code>node profileBuilder.js</code>.</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Right: Static Reference Code -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-bold text-slate-700 uppercase">Reference Code Guide (Read-Only)</span>
+                <span class="text-[11px] text-rose-600 font-semibold">Type Manually on Your Computer</span>
+              </div>
+              <pre class="bg-slate-900 text-slate-100 p-4 rounded-xl text-xs leading-relaxed overflow-x-auto border border-slate-800">// profileBuilder.js
+
+function createStudentProfile(name, id, program, yearLevel, schoolYear) {
+  return {
+    name: name,
+    id: id,
+    program: program,
+    yearLevel: yearLevel,
+    schoolYear: schoolYear
+  };
+}
+
+const myProfile = createStudentProfile(
+  "Your Full Name",
+  0000,
+  "Your Program",
+  "Your Year Level",
+  "2026-2027"
+);
+
+console.log(myProfile);</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================
+           PAGE 3: PART 2, LESSON 2 — OBJECT METHODS WITH ARGUMENTS (studentDirectory.js)
+      ================================================================== -->
+      <div id="lesson-page-3" class="lesson-page hidden space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
+          <div class="border-b border-slate-100 pb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Part 2 — Laboratory Coding Task • Lesson 2</span>
+            <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
+              Lesson 2: Object Methods with Arguments (<code class="text-indigo-700">studentDirectory.js</code>)
+            </h3>
+            <p class="text-sm text-slate-600 mt-1">
+              Construct an object with personal properties and a method utilizing <code class="text-indigo-700">this</code> and template literals on your local machine.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left: Static Step-by-Step Instructions & Local Checklist -->
+            <div class="space-y-4">
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-2.5 text-xs text-slate-700">
+                <h4 class="font-bold text-slate-900 text-sm">Local Workstation Instructions:</h4>
+                <ul class="list-disc pl-5 space-y-1.5">
+                  <li>Create <code>studentDirectory.js</code> inside your <code>Modular JavaScript Student Profile</code> subfolder.</li>
+                  <li>Define an object named <code>studentRecord</code> with keys <code>name</code>, <code>id</code>, <code>program</code>, <code>yearLevel</code>, and <code>schoolYear</code>.</li>
+                  <li>Add a method <code>getEnrollmentDetails(semester, campus)</code> that uses <code>this</code> and template literals to return a formatted enrollment string.</li>
+                  <li>Test in your local terminal: <code class="px-1.5 py-0.5 rounded bg-slate-200 text-slate-900 font-semibold">node studentDirectory.js</code></li>
+                </ul>
+              </div>
+
+              <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-5 space-y-3">
+                <h4 class="text-sm font-bold text-indigo-950">Local Completion Verification</h4>
+                <p class="text-xs text-indigo-800">Perform this task on your computer, then check the box below once verified in your terminal:</p>
+                <label class="flex items-start gap-3 p-3 rounded-lg bg-white border border-indigo-100 cursor-pointer text-xs font-medium text-slate-800">
+                  <input type="checkbox" id="check-lesson2" class="w-4 h-4 mt-0.5 rounded text-indigo-600" onchange="toggleLessonCheck(2, this.checked)" />
+                  <span>I have created <code>studentDirectory.js</code> on my computer using <code>this</code> and template literals, and verified the output using <code>node studentDirectory.js</code>.</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Right: Static Reference Code -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-bold text-slate-700 uppercase">Reference Code Guide (Read-Only)</span>
+                <span class="text-[11px] text-rose-600 font-semibold">Type Manually on Your Computer</span>
+              </div>
+              <pre class="bg-slate-900 text-slate-100 p-4 rounded-xl text-xs leading-relaxed overflow-x-auto border border-slate-800">// studentDirectory.js
+
+const studentRecord = {
+  name: "Your Full Name",
+  id: 0000,
+  program: "Your Program",
+  yearLevel: "Your Year Level",
+  schoolYear: "2026-2027",
+
+  getEnrollmentDetails(semester, campus) {
+    return `[${this.schoolYear} | ${semester}] Student ${this.name} (ID: ${this.id}) from ${this.program} (${this.yearLevel}) is registered at ${campus}.`;
+  }
+};
+
+console.log(studentRecord.getEnrollmentDetails("1st Semester", "Main Campus"));</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================
+           PAGE 4: PART 2, LESSON 3 — ES6 MODULES (studentModule.js & mainApp.js)
+      ================================================================== -->
+      <div id="lesson-page-4" class="lesson-page hidden space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 space-y-6">
+          <div class="border-b border-slate-100 pb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Part 2 — Laboratory Coding Task • Lesson 3</span>
+            <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1">
+              Lesson 3: ES6 Modules (<code class="text-indigo-700">studentModule.js</code> &amp; <code class="text-indigo-700">mainApp.js</code>)
+            </h3>
+            <p class="text-sm text-slate-600 mt-1">
+              Create both ES6 module files on your computer, export your profile and helper function from <code class="text-indigo-700">studentModule.js</code>, and execute <code class="text-indigo-700">mainApp.js</code> in your local terminal.
+            </p>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1.5 text-xs text-slate-700">
+            <h4 class="font-bold text-slate-900 text-sm">Local Workstation Instructions:</h4>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Create <code>studentModule.js</code> to export your <code>studentDetails</code> object and a <code>printSummary(student, status)</code> helper function.</li>
+              <li>Create <code>mainApp.js</code> to import both items from <code>./studentModule.js</code> and execute them.</li>
+              <li>Test in your local terminal: <code class="px-1.5 py-0.5 rounded bg-slate-200 text-slate-900 font-semibold">node mainApp.js</code></li>
+            </ul>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- File 1: studentModule.js -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <h4 class="text-sm font-bold text-slate-900">File 1: <code class="text-indigo-700">studentModule.js</code></h4>
+                <span class="text-[11px] text-rose-600 font-semibold">Reference (Copy Disabled)</span>
+              </div>
+              <pre class="bg-slate-900 text-slate-100 p-4 rounded-xl text-xs leading-relaxed overflow-x-auto border border-slate-800">// studentModule.js
+
+export const studentDetails = {
+  name: "Your Full Name",
+  id: 0000,
+  program: "Your Program",
+  yearLevel: "Your Year Level",
+  schoolYear: "2026-2027"
+};
+
+export function printSummary(student, status) {
+  return `Student: ${student.name} | ID: ${student.id} | Program: ${student.program} | Status: ${status}`;
+}</pre>
+            </div>
+
+            <!-- File 2: mainApp.js -->
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <h4 class="text-sm font-bold text-slate-900">File 2: <code class="text-indigo-700">mainApp.js</code></h4>
+                <span class="text-[11px] text-rose-600 font-semibold">Reference (Copy Disabled)</span>
+              </div>
+              <pre class="bg-slate-900 text-slate-100 p-4 rounded-xl text-xs leading-relaxed overflow-x-auto border border-slate-800">// mainApp.js
+
+import { studentDetails, printSummary } from './studentModule.js';
+
+const enrollmentMessage = printSummary(studentDetails, "Officially Enrolled");
+console.log(enrollmentMessage);</pre>
+            </div>
+          </div>
+
+          <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-5 space-y-3">
+            <h4 class="text-sm font-bold text-indigo-950">Local Completion Verification</h4>
+            <label class="flex items-start gap-3 p-3 rounded-lg bg-white border border-indigo-100 cursor-pointer text-xs font-medium text-slate-800">
+              <input type="checkbox" id="check-lesson3" class="w-4 h-4 mt-0.5 rounded text-indigo-600" onchange="toggleLessonCheck(3, this.checked)" />
+              <span>I have created both <code>studentModule.js</code> and <code>mainApp.js</code> on my computer and verified the ES6 module output using <code>node mainApp.js</code>.</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================
+           PAGE 5: PART 3 — VERIFICATION ANSWER SHEET (README.md)
+      ================================================================== -->
+      <div id="lesson-page-5" class="lesson-page hidden space-y-6">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 sm:p-8 space-y-6">
+          <div class="border-b border-slate-800 pb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Part 3 of 4</span>
+            <h3 class="text-xl sm:text-2xl font-extrabold text-white mt-1">
+              Verification Answer Sheet (<code class="text-indigo-300">README.md</code>)
+            </h3>
+            <p class="text-sm text-slate-400 mt-1">
+              Create <code>README.md</code> inside your local <code>Modular JavaScript Student Profile</code> subfolder and keep every answer short and concise (<strong>1–2 sentences max</strong>).
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-300 mb-1">Program</label>
+                  <input type="text" id="readme-program" oninput="updateReadmePreview()" placeholder="e.g., BSIT"
+                    class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-indigo-500 outline-none" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-300 mb-1">Year Level</label>
+                  <input type="text" id="readme-year" oninput="updateReadmePreview()" placeholder="e.g., 2nd Year"
+                    class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs focus:border-indigo-500 outline-none" />
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-bold text-slate-200">1. Difference between a function parameter and a function argument?</label>
+                  <span id="q1-count" class="text-[11px] font-mono text-slate-400">0 sentences</span>
+                </div>
+                <textarea id="q1-answer" rows="2" oninput="updateReadmePreview()" placeholder="1–2 sentences max..."
+                  class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 outline-none"></textarea>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-bold text-slate-200">2. How does the <code>this</code> keyword allow an object method to reference properties within the same object?</label>
+                  <span id="q2-count" class="text-[11px] font-mono text-slate-400">0 sentences</span>
+                </div>
+                <textarea id="q2-answer" rows="2" oninput="updateReadmePreview()" placeholder="1–2 sentences max..."
+                  class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 outline-none"></textarea>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-bold text-slate-200">3. Why is modularizing code using <code>import</code> and <code>export</code> useful in modern JavaScript development?</label>
+                  <span id="q3-count" class="text-[11px] font-mono text-slate-400">0 sentences</span>
+                </div>
+                <textarea id="q3-answer" rows="2" oninput="updateReadmePreview()" placeholder="1–2 sentences max..."
+                  class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 outline-none"></textarea>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-bold text-slate-200">4. Why is it important to run <code>git pull origin main</code> before creating new folders and pushing commits to your main repository?</label>
+                  <span id="q4-count" class="text-[11px] font-mono text-slate-400">0 sentences</span>
+                </div>
+                <textarea id="q4-answer" rows="2" oninput="updateReadmePreview()" placeholder="1–2 sentences max..."
+                  class="w-full p-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:border-indigo-500 outline-none"></textarea>
+              </div>
+            </div>
+
+            <div class="flex flex-col">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-bold text-slate-400 uppercase">Live <code class="lowercase">README.md</code> Output</span>
+                <span class="text-[11px] text-emerald-400">Auto-populated</span>
+              </div>
+              <pre id="readme-preview-box" class="flex-1 bg-slate-950 text-slate-200 p-4 rounded-xl text-xs leading-relaxed overflow-x-auto border border-slate-800 whitespace-pre-wrap"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =================================================================
+           PAGE 6: PART 4 — SCREENSHOT, GITHUB SUBMISSION & GRADING RUBRIC
+      ================================================================== -->
+      <div id="lesson-page-6" class="lesson-page hidden space-y-6">
+        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 sm:p-8 space-y-6">
+          <div class="border-b border-slate-800 pb-4">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">Part 4 of 4</span>
+            <h3 class="text-xl sm:text-2xl font-extrabold text-white mt-1">
+              Screenshot, GitHub Submission &amp; Grading Rubric
+            </h3>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs text-slate-300">
+                <h4 class="font-bold text-white text-sm">1. Capture the <code class="text-indigo-300">package.json</code> Screenshot</h4>
+                <ul class="list-disc pl-5 space-y-1">
+                  <li>Open <code>package.json</code> in your code editor so that <code>"type": "module"</code> is clearly visible.</li>
+                  <li>Take a screenshot of the editor window showing the contents of <code>package.json</code>.</li>
+                  <li>Save inside <code>Modular JavaScript Student Profile</code> as: <strong class="text-emerald-300"><code>package-json-screenshot.png</code></strong> (or <code>.jpg</code>).</li>
+                </ul>
+              </div>
+
+              <div class="space-y-2">
+                <h4 class="font-bold text-white text-sm">2. Stage, Commit (with Current Date &amp; Time), and Push</h4>
+                <pre id="git-commands-preview" class="bg-slate-950 text-emerald-300 p-4 rounded-xl text-xs leading-relaxed overflow-x-auto border border-slate-800"></pre>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2.5 text-xs text-slate-300">
+                <h4 class="font-bold text-indigo-300 text-sm">3. Final GitHub Verification Checklist</h4>
+                <label class="flex items-start gap-2.5 cursor-pointer">
+                  <input type="checkbox" class="final-check w-4 h-4 mt-0.5 rounded accent-indigo-600" onchange="updateProgress()" />
+                  <span>The <code>Modular JavaScript Student Profile</code> subfolder exists on the <code>main</code> branch.</span>
+                </label>
+                <label class="flex items-start gap-2.5 cursor-pointer">
+                  <input type="checkbox" class="final-check w-4 h-4 mt-0.5 rounded accent-indigo-600" onchange="updateProgress()" />
+                  <span>All four <code>.js</code> files (<code>profileBuilder.js</code>, <code>studentDirectory.js</code>, <code>studentModule.js</code>, <code>mainApp.js</code>) and <code>package.json</code> are present.</span>
+                </label>
+                <label class="flex items-start gap-2.5 cursor-pointer">
+                  <input type="checkbox" class="final-check w-4 h-4 mt-0.5 rounded accent-indigo-600" onchange="updateProgress()" />
+                  <span><code>README.md</code> displays your short, concise answers cleanly.</span>
+                </label>
+                <label class="flex items-start gap-2.5 cursor-pointer">
+                  <input type="checkbox" class="final-check w-4 h-4 mt-0.5 rounded accent-indigo-600" onchange="updateProgress()" />
+                  <span><code>package-json-screenshot.png</code> opens and clearly shows <code>"type": "module"</code>.</span>
+                </label>
+              </div>
+
+              <!-- Grading Rubric -->
+              <div class="border border-slate-800 rounded-xl overflow-hidden">
+                <div class="bg-indigo-950 text-indigo-200 px-4 py-2.5 text-xs font-bold uppercase tracking-wider border-b border-slate-800">
+                  Grading Rubric (100%)
+                </div>
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-950 text-slate-300 font-bold border-b border-slate-800">
+                    <tr>
+                      <th class="px-3.5 py-2">Criteria</th>
+                      <th class="px-3.5 py-2">Weight</th>
+                      <th class="px-3.5 py-2">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-800 text-slate-300 bg-slate-900/60">
+                    <tr>
+                      <td class="px-3.5 py-2 font-semibold text-white">Repository Structure &amp; Filenames</td>
+                      <td class="px-3.5 py-2 font-bold text-indigo-400">20%</td>
+                      <td class="px-3.5 py-2">Saved in Main Repository under <code>Modular JavaScript Student Profile</code> with exact required filenames.</td>
+                    </tr>
+                    <tr>
+                      <td class="px-3.5 py-2 font-semibold text-white">Functions &amp; Methods (Lessons 1 &amp; 2)</td>
+                      <td class="px-3.5 py-2 font-bold text-indigo-400">30%</td>
+                      <td class="px-3.5 py-2">Working <code>createStudentProfile</code> function and <code>getEnrollmentDetails</code> method using <code>this</code> and template literals.</td>
+                    </tr>
+                    <tr>
+                      <td class="px-3.5 py-2 font-semibold text-white">ES6 Modules &amp; Screenshot (Lesson 3)</td>
+                      <td class="px-3.5 py-2 font-bold text-indigo-400">30%</td>
+                      <td class="px-3.5 py-2">Working export/import implementation with <code>"type": "module"</code> verified via <code>package-json-screenshot.png</code>.</td>
+                    </tr>
+                    <tr>
+                      <td class="px-3.5 py-2 font-semibold text-white">README.md Answer Sheet</td>
+                      <td class="px-3.5 py-2 font-bold text-indigo-400">20%</td>
+                      <td class="px-3.5 py-2">All four verification questions answered accurately, shortly, and concisely inside <code>README.md</code>.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Generate Official Laboratory Receipt Box -->
+          <div class="bg-slate-950 rounded-2xl p-5 sm:p-6 border border-slate-800 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div class="space-y-1">
+                <h4 class="text-base font-bold text-white">Student Laboratory Completion Summary</h4>
+                <p class="text-xs text-slate-400">
+                  Completed Parts: <span id="summary-tasks" class="font-mono font-bold text-emerald-400">0 / 6</span>
+                  <span class="mx-2">•</span>
+                  Security Alerts: <span id="summary-violations" class="font-mono font-bold text-rose-400">0</span>
+                </p>
+              </div>
+              <button onclick="openReceiptModal()"
+                class="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-extrabold shadow-lg transition">
+                Generate Official Completion Receipt
+              </button>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Your Main GitHub Repository URL (Optional for Receipt):</label>
+              <input type="url" id="github-repo-url" placeholder="https://github.com/your-username/your-main-repository"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono text-emerald-300 focus:border-indigo-500 outline-none" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Wizard Navigation -->
+      <div class="flex items-center justify-between bg-slate-900 rounded-2xl border border-slate-800 p-4">
+        <button id="btn-prev-page" onclick="changeLessonPage(-1)"
+          class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none text-xs sm:text-sm font-bold text-white transition flex items-center gap-2">
+          <span>← Previous Lesson</span>
+        </button>
+
+        <div class="text-xs font-semibold text-slate-400 hidden sm:block" id="bottom-page-title">
+          Part 1: Repository &amp; Setup
+        </div>
+
+        <button id="btn-next-page" onclick="changeLessonPage(1)"
+          class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:pointer-events-none text-xs sm:text-sm font-bold text-white transition flex items-center gap-2 shadow">
+          <span>Next Lesson →</span>
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // 1. OFFICIAL IPT101 ENROLLED ROSTER (22 STUDENTS)
+    // =========================================================================
+    const ENROLLED_ROSTER = [
+      { last: "Bier", first: "Margarette", mi: "F" },
+      { last: "Derder", first: "Mexandryl", mi: "V" },
+      { last: "Idos", first: "Cristine Joy", mi: "K" },
+      { last: "Caliging", first: "Angelo", mi: "A" },
+      { last: "Villaver", first: "Raven Ashley", mi: "D" },
+      { last: "Dela Cruz", first: "Shadrach Vincent", mi: "D" },
+      { last: "Gagan", first: "Jyles Jea", mi: "R" },
+      { last: "Galutan", first: "Tristan", mi: "A" },
+      { last: "Balbin", first: "Benz Andrie", mi: "P" },
+      { last: "Malatag", first: "Balligi", mi: "M" },
+      { last: "Kimayong", first: "Shekinah Dale", mi: "Q" },
+      { last: "Galvadores", first: "Prince Joseph", mi: "I" },
+      { last: "Ongcal", first: "Edford", mi: "M" },
+      { last: "Ortega", first: "Ezra", mi: "R" },
+      { last: "Camenade", first: "Josue Jr.", mi: "" },
+      { last: "Sencio", first: "Heartsson", mi: "D" },
+      { last: "Umipig", first: "Irish Mae", mi: "F" },
+      { last: "Johnson", first: "Isimu", mi: "M" },
+      { last: "Vinluan", first: "Kevin Emil", mi: "B" },
+      { last: "Javier", first: "Mark Angelo", mi: "M" },
+      { last: "Baniago", first: "Richelle", mi: "D" },
+      { last: "Bar", first: "Jon", mi: "B" }
+    ];
+
+    function normalizeText(str) {
+      return (str || "")
+        .toLowerCase()
+        .replace(/[.,]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function verifyRosterStudent(lastInput, firstInput, miInput) {
+      const normLast = normalizeText(lastInput);
+      const normFirst = normalizeText(firstInput);
+      const normMi = normalizeText(miInput);
+
+      return ENROLLED_ROSTER.find(student => {
+        const sLast = normalizeText(student.last);
+        const sFirst = normalizeText(student.first);
+        const sMi = normalizeText(student.mi);
+
+        if (sLast === "camenade") {
+          const combinedInput = `${normLast} ${normFirst}`.trim();
+          const isCamenade =
+            (normLast === "camenade" && (normFirst === "josue jr" || normFirst === "josue")) ||
+            combinedInput === "camenade josue jr";
+          return isCamenade && (normMi === "" || normMi === sMi);
+        }
+
+        return normLast === sLast && normFirst === sFirst && normMi === sMi;
+      });
+    }
+
+    // =========================================================================
+    // 2. PRODUCTION APPLICATION STATE & LIVE SCHEDULE ENFORCEMENT
+    // =========================================================================
+    let appState = {
+      authenticated: false,
+      student: null,
+      currentPage: 1,
+      totalPages: 6,
+      violationCount: 0,
+      verifiedLessons: {
+        lesson1: false,
+        lesson2: false,
+        lesson3: false
+      }
+    };
+
+    const PAGE_TITLES = [
+      "Part 1: Repo Setup",
+      "Lesson 1: profileBuilder.js",
+      "Lesson 2: studentDirectory.js",
+      "Lesson 3: ES6 Modules",
+      "Part 3: README.md Sheet",
+      "Part 4: GitHub & Rubric"
+    ];
+
+    // Live system real-time clock
+    function getLiveNow() {
+      return new Date();
+    }
+
+    // Schedule Enforcement:
+    // Lab A: TTH 7:30AM-8:30AM - extension until 9:00AM (November 24, 2026)
+    // Lab B: TTH 8:30AM-9:30AM - extension until 10:00AM (November 24, 2026)
+    function evaluateSectionSchedule(section, now) {
+      if (section === "Lab A") {
+        const openTime = new Date(2026, 10, 24, 7, 30, 0);
+        const regularEnd = new Date(2026, 10, 24, 8, 30, 0);
+        const hardClose = new Date(2026, 10, 24, 9, 0, 0);
+
+        if (now < openTime) {
+          return {
+            allowed: false,
+            reason: "Lab A opens on Tuesday, November 24, 2026 at 7:30:00 AM.",
+            windowText: "Nov 24, 2026 • 7:30 AM – 8:30 AM (Ext. 9:00 AM)",
+            hardClose
+          };
+        }
+        if (now > hardClose) {
+          return {
+            allowed: false,
+            reason: "Lab A closed on Tuesday, November 24, 2026 at 9:00:00 AM (including 30-min extension).",
+            windowText: "Nov 24, 2026 • 7:30 AM – 8:30 AM (Ext. 9:00 AM)",
+            hardClose
+          };
+        }
+        return {
+          allowed: true,
+          isExtension: now > regularEnd,
+          windowText: "Nov 24, 2026 • 7:30 AM – 8:30 AM (Ext. 9:00 AM)",
+          hardClose
+        };
+      }
+
+      if (section === "Lab B") {
+        const openTime = new Date(2026, 10, 24, 8, 30, 0);
+        const regularEnd = new Date(2026, 10, 24, 9, 30, 0);
+        const hardClose = new Date(2026, 10, 24, 10, 0, 0);
+
+        if (now < openTime) {
+          return {
+            allowed: false,
+            reason: "Lab B opens on Tuesday, November 24, 2026 at 8:30:00 AM.",
+            windowText: "Nov 24, 2026 • 8:30 AM – 9:30 AM (Ext. 10:00 AM)",
+            hardClose
+          };
+        }
+        if (now > hardClose) {
+          return {
+            allowed: false,
+            reason: "Lab B closed on Tuesday, November 24, 2026 at 10:00:00 AM (including 30-min extension).",
+            windowText: "Nov 24, 2026 • 8:30 AM – 9:30 AM (Ext. 10:00 AM)",
+            hardClose
+          };
+        }
+        return {
+          allowed: true,
+          isExtension: now > regularEnd,
+          windowText: "Nov 24, 2026 • 8:30 AM – 9:30 AM (Ext. 10:00 AM)",
+          hardClose
+        };
+      }
+
+      return { allowed: false, reason: "Invalid section selected." };
+    }
+
+    function formatClockDate(dateObj) {
+      return dateObj.toLocaleString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+      });
+    }
+
+    function formatCountdown(ms) {
+      if (ms <= 0) return "00:00:00";
+      const totalSec = Math.floor(ms / 1000);
+      const hrs = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+      const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+      const secs = String(totalSec % 60).padStart(2, "0");
+      return `${hrs}:${mins}:${secs}`;
+    }
+
+    function updateClockAndEnforcement() {
+      const now = getLiveNow();
+      document.getElementById("live-clock-display").textContent = formatClockDate(now);
+      updateGitCommandPreview(now);
+
+      if (appState.authenticated && appState.student) {
+        const evalResult = evaluateSectionSchedule(appState.student.section, now);
+        if (!evalResult.allowed) {
+          showLockoutScreen(
+            "Laboratory Window Closed",
+            `${appState.student.section} Schedule Enforcement`,
+            `${evalResult.reason} The laboratory application has been automatically closed for ${appState.student.fullName}.`,
+            {
+              "Student Name": appState.student.fullName,
+              "ID Number": appState.student.idNumber,
+              "Section": appState.student.section,
+              "Current Time": formatClockDate(now),
+              "Allowed Window": evalResult.windowText
+            }
+          );
+          return;
+        }
+
+        const remainingMs = evalResult.hardClose - now;
+        document.getElementById("window-countdown").textContent = formatCountdown(remainingMs);
+
+        const winBadge = document.getElementById("window-status-badge");
+        if (evalResult.isExtension) {
+          winBadge.textContent = "Extension Window Active";
+          winBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse";
+        } else {
+          winBadge.textContent = "Regular Window Active";
+          winBadge.className = "px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        }
+      }
+    }
+
+    setInterval(updateClockAndEnforcement, 1000);
+
+    // =========================================================================
+    // 3. LOGIN & LOCKOUT HANDLERS
+    // =========================================================================
+    function handleStudentLogin(e) {
+      e.preventDefault();
+
+      const lastInput = document.getElementById("input-lastname").value.trim();
+      const firstInput = document.getElementById("input-firstname").value.trim();
+      const miInput = document.getElementById("input-mi").value.trim();
+      const idNumber = document.getElementById("input-idnumber").value.trim();
+      const section = document.getElementById("input-section").value;
+
+      const matched = verifyRosterStudent(lastInput, firstInput, miInput);
+      const now = getLiveNow();
+
+      if (!matched) {
+        const attemptedName = `${lastInput}, ${firstInput} ${miInput ? miInput.replace(/\.$/, "") + "." : ""}`.trim();
+        showLockoutScreen(
+          "Access Denied: Unregistered Student",
+          "Application Automatically Disabled",
+          "The entered student name does not match any enrolled student in the official IPT101 Google Classroom roster. Access is strictly restricted.",
+          {
+            "Entered Name": attemptedName || "N/A",
+            "Entered ID": idNumber || "N/A",
+            "Selected Section": section || "N/A",
+            "Timestamp": formatClockDate(now),
+            "Status": "REJECTED — NOT IN IPT101 ROSTER"
+          }
+        );
+        return;
+      }
+
+      const canonicalMi = matched.mi ? ` ${matched.mi}.` : "";
+      const canonicalFullName = `${matched.first}${canonicalMi} ${matched.last}`;
+      const canonicalRosterFormat = `${matched.last}, ${matched.first}${canonicalMi}`;
+
+      const scheduleCheck = evaluateSectionSchedule(section, now);
+      if (!scheduleCheck.allowed) {
+        showLockoutScreen(
+          "Laboratory Schedule Closed",
+          `${section} Access Restricted`,
+          `${scheduleCheck.reason} Please return during your assigned ${section} schedule window.`,
+          {
+            "Verified Student": canonicalRosterFormat,
+            "ID Number": idNumber,
+            "Selected Section": section,
+            "Current Time": formatClockDate(now),
+            "Required Schedule": scheduleCheck.windowText
+          }
+        );
+        return;
+      }
+
+      appState.authenticated = true;
+      appState.student = {
+        last: matched.last,
+        first: matched.first,
+        mi: matched.mi,
+        fullName: canonicalFullName,
+        rosterFormat: canonicalRosterFormat,
+        idNumber: idNumber,
+        section: section
+      };
+
+      document.getElementById("display-student-name").textContent = canonicalRosterFormat;
+      document.getElementById("display-student-id").textContent = idNumber;
+      document.getElementById("display-student-section").textContent = section;
+      document.getElementById("display-window-info").textContent = scheduleCheck.windowText;
+      document.getElementById("student-avatar").textContent =
+        (matched.first[0] + matched.last[0]).toUpperCase();
+
+      renderWatermark();
+      updateReadmePreview();
+      updateGitCommandPreview(now);
+      updateClockAndEnforcement();
+
+      document.getElementById("auth-view").classList.add("hidden");
+      document.getElementById("lockout-view").classList.add("hidden");
+      document.getElementById("lab-workspace").classList.remove("hidden");
+
+      goToLessonPage(1);
+    }
+
+    function showLockoutScreen(title, badge, message, detailsObj) {
+      appState.authenticated = false;
+      document.getElementById("auth-view").classList.add("hidden");
+      document.getElementById("lab-workspace").classList.add("hidden");
+      document.getElementById("watermark-layer").classList.add("hidden");
+
+      document.getElementById("lockout-title").textContent = title;
+      document.getElementById("lockout-badge").textContent = badge;
+      document.getElementById("lockout-message").textContent = message;
+
+      const detailsEl = document.getElementById("lockout-details");
+      detailsEl.innerHTML = Object.entries(detailsObj)
+        .map(([k, v]) => `<div><span class="text-slate-500">${k}:</span> <span class="font-bold text-slate-200">${v}</span></div>`)
+        .join("");
+
+      document.getElementById("lockout-view").classList.remove("hidden");
+    }
+
+    function resetToLogin() {
+      appState.authenticated = false;
+      appState.student = null;
+      document.getElementById("lockout-view").classList.add("hidden");
+      document.getElementById("lab-workspace").classList.add("hidden");
+      document.getElementById("watermark-layer").classList.add("hidden");
+      document.getElementById("auth-view").classList.remove("hidden");
+    }
+
+    // =========================================================================
+    // 4. STRICT ANTI-COPY, ANTI-PASTE & ANTI-SCREENSHOT SAFEGUARDS
+    // =========================================================================
+    let toastTimeout = null;
+
+    function showToast(title, msg) {
+      const banner = document.getElementById("toast-banner");
+      document.getElementById("toast-title").textContent = title;
+      document.getElementById("toast-msg").textContent = msg;
+      banner.classList.remove("hidden");
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        banner.classList.add("hidden");
+      }, 3200);
+    }
+
+    function triggerSecurityShield(reasonText) {
+      if (!appState.authenticated) return;
+      appState.violationCount++;
+      document.getElementById("shield-count").textContent = appState.violationCount;
+      document.getElementById("header-violation-count").textContent = appState.violationCount;
+      document.getElementById("summary-violations").textContent = appState.violationCount;
+      document.getElementById("shield-reason").textContent = reasonText;
+      document.getElementById("privacy-shield").classList.remove("hidden");
+    }
+
+    function dismissPrivacyShield() {
+      document.getElementById("privacy-shield").classList.add("hidden");
+    }
+
+    ["copy", "cut", "paste"].forEach(evtName => {
+      document.addEventListener(evtName, e => {
+        e.preventDefault();
+        showToast(
+          `${evtName.toUpperCase()} Blocked`,
+          "Copy and paste are strictly disabled. Type your code and answers manually."
+        );
+      });
+    });
+
+    document.addEventListener("contextmenu", e => {
+      e.preventDefault();
+      showToast("Right-Click Blocked", "Context menu is disabled during this laboratory.");
+    });
+
+    document.addEventListener("dragstart", e => {
+      e.preventDefault();
+    });
+
+    document.addEventListener("keydown", e => {
+      const key = e.key.toLowerCase();
+      const ctrlOrMeta = e.ctrlKey || e.metaKey;
+
+      if (e.key === "PrintScreen" || e.keyCode === 44) {
+        e.preventDefault();
+        triggerSecurityShield("PrintScreen key detected! Screen capture is strictly prohibited.");
+        return;
+      }
+
+      if (e.metaKey && e.shiftKey && ["3", "4", "5"].includes(key)) {
+        e.preventDefault();
+        triggerSecurityShield("Screenshot shortcut detected! Screen capture is strictly prohibited.");
+        return;
+      }
+
+      if (ctrlOrMeta && ["c", "v", "x", "a", "u", "s", "p"].includes(key)) {
+        e.preventDefault();
+        showToast("Shortcut Blocked", `Shortcut (${e.ctrlKey ? "Ctrl" : "Cmd"}+${key.toUpperCase()}) is disabled.`);
+        return;
+      }
+
+      if (e.key === "F12" || (ctrlOrMeta && e.shiftKey && ["i", "j", "c"].includes(key))) {
+        e.preventDefault();
+        showToast("DevTools Blocked", "Developer Tools shortcuts are disabled.");
+      }
+    });
+
+    document.addEventListener("keyup", e => {
+      if (e.key === "PrintScreen" || e.keyCode === 44) {
+        triggerSecurityShield("PrintScreen capture attempt detected and logged.");
+      }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && appState.authenticated) {
+        triggerSecurityShield("Tab switch or external capture overlay detected.");
+      }
+    });
+
+    function renderWatermark() {
+      const layer = document.getElementById("watermark-layer");
+      if (!appState.student) return;
+      const text = `${appState.student.rosterFormat} • ID: ${appState.student.idNumber} • ${appState.student.section} • IPT101`;
+      let html = "";
+      for (let i = 0; i < 24; i++) {
+        html += `<div class="text-xs font-mono font-bold text-slate-300 whitespace-nowrap select-none">${text}</div>`;
+      }
+      layer.innerHTML = html;
+      layer.classList.remove("hidden");
+    }
+
+    // =========================================================================
+    // 5. MULTI-PAGE WIZARD NAVIGATION (ONE PAGE PER LESSON)
+    // =========================================================================
+    function renderStepNav() {
+      const container = document.getElementById("step-nav-container");
+      if (!container) return;
+      container.innerHTML = PAGE_TITLES.map((title, idx) => {
+        const pageNum = idx + 1;
+        const isActive = pageNum === appState.currentPage;
+        const baseClass = isActive
+          ? "bg-indigo-600 text-white border-indigo-500 shadow"
+          : "bg-slate-950 hover:bg-slate-800 text-slate-400 border-slate-800";
+        return `
+          <button onclick="goToLessonPage(${pageNum})"
+            class="px-3 py-2 rounded-xl border text-left transition flex flex-col justify-between ${baseClass}">
+            <span class="text-[10px] font-bold uppercase tracking-wider opacity-75">Page ${pageNum}</span>
+            <span class="text-xs font-bold truncate mt-0.5">${title}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function goToLessonPage(pageNum) {
+      if (pageNum < 1 || pageNum > appState.totalPages) return;
+      appState.currentPage = pageNum;
+
+      for (let i = 1; i <= appState.totalPages; i++) {
+        const el = document.getElementById(`lesson-page-${i}`);
+        if (el) {
+          if (i === pageNum) el.classList.remove("hidden");
+          else el.classList.add("hidden");
+        }
+      }
+
+      document.getElementById("page-indicator-badge").textContent = `Page ${pageNum} of ${appState.totalPages}`;
+      document.getElementById("bottom-page-title").textContent = PAGE_TITLES[pageNum - 1];
+
+      document.getElementById("btn-prev-page").disabled = pageNum === 1;
+      document.getElementById("btn-next-page").disabled = pageNum === appState.totalPages;
+
+      renderStepNav();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function changeLessonPage(delta) {
+      goToLessonPage(appState.currentPage + delta);
+    }
+
+    // =========================================================================
+    // 6. LOCAL COMPLETION CHECKLISTS, README & OFFICIAL RECEIPT HELPERS
+    // =========================================================================
+    function toggleLessonCheck(lessonNum, isChecked) {
+      appState.verifiedLessons[`lesson${lessonNum}`] = isChecked;
+      updateProgress();
+    }
+
+    function countSentences(text) {
+      if (!text.trim()) return 0;
+      const matches = text.trim().split(/[.!?]+/).filter(s => s.trim().length > 0);
+      return matches.length;
+    }
+
+    function updateReadmePreview() {
+      const name = appState.student ? appState.student.fullName : "Your Full Name";
+      const id = appState.student ? appState.student.idNumber : "0000";
+      const prog = document.getElementById("readme-program").value.trim() || "Your Program";
+      const yr = document.getElementById("readme-year").value.trim() || "Your Year Level";
+
+      const answers = [1, 2, 3, 4].map(num => {
+        const val = document.getElementById(`q${num}-answer`).value.trim();
+        const sc = countSentences(val);
+        const countEl = document.getElementById(`q${num}-count`);
+        countEl.textContent = `${sc} sentence${sc === 1 ? "" : "s"}`;
+        countEl.className = sc > 2
+          ? "text-[11px] font-mono font-bold text-rose-400"
+          : "text-[11px] font-mono text-emerald-400";
+        return val || "[Your concise answer here — 1 to 2 sentences]";
+      });
+
+      const md = `# Laboratory Exercise: Modular JavaScript Student Profile
+
+**Name:** ${name}  
+**Student ID:** ${id}  
+**Program & Year:** ${prog} - ${yr}  
+
+---
+
+## Verification Questions (Answer Sheet)
+
+### 1. What is the difference between a function parameter and a function argument?
+> ${answers[0]}
+
+### 2. How does the \`this\` keyword allow an object method to reference properties within the same object?
+> ${answers[1]}
+
+### 3. Why is modularizing code using \`import\` and \`export\` useful in modern JavaScript development?
+> ${answers[2]}
+
+### 4. Why is it important to run \`git pull origin main\` before creating new folders and pushing commits to your main repository?
+> ${answers[3]}`;
+
+      document.getElementById("readme-preview-box").textContent = md;
+      updateProgress();
+    }
+
+    function updateGitCommandPreview(now) {
+      const timestamp = formatClockDate(now || getLiveNow());
+      const box = document.getElementById("git-commands-preview");
+      if (!box) return;
+      box.textContent = `# 1. Verify all 7 files are detected inside the subfolder
+git status
+
+# 2. Stage the subfolder and all its contents
+git add "Modular JavaScript Student Profile/"
+
+# 3. Commit your work (include current date and time)
+git commit -m "Add Modular JavaScript Student Profile lab with README and package.json screenshot (${timestamp})"
+
+# 4. Push to your main GitHub repository
+git push origin main`;
+    }
+
+    function updateProgress() {
+      const setupChecks = Array.from(document.querySelectorAll(".setup-check")).filter(c => c.checked).length === 3;
+      const readmeComplete =
+        document.getElementById("q1-answer").value.trim().length > 5 &&
+        document.getElementById("q2-answer").value.trim().length > 5 &&
+        document.getElementById("q3-answer").value.trim().length > 5 &&
+        document.getElementById("q4-answer").value.trim().length > 5;
+      const finalChecks = Array.from(document.querySelectorAll(".final-check")).filter(c => c.checked).length === 4;
+
+      let completed = 0;
+      if (setupChecks) completed++;
+      if (appState.verifiedLessons.lesson1) completed++;
+      if (appState.verifiedLessons.lesson2) completed++;
+      if (appState.verifiedLessons.lesson3) completed++;
+      if (readmeComplete) completed++;
+      if (finalChecks) completed++;
+
+      document.getElementById("summary-tasks").textContent = `${completed} / 6`;
+      return completed;
+    }
+
+    function openReceiptModal() {
+      const completed = updateProgress();
+      const s = appState.student || { rosterFormat: "N/A", idNumber: "N/A", section: "N/A" };
+      const nowStr = formatClockDate(getLiveNow());
+      const repoUrl = document.getElementById("github-repo-url").value.trim() || "Not provided";
+
+      const setupCount = Array.from(document.querySelectorAll(".setup-check")).filter(c => c.checked).length;
+      const finalCount = Array.from(document.querySelectorAll(".final-check")).filter(c => c.checked).length;
+      const readmeOk =
+        document.getElementById("q1-answer").value.trim().length > 5 &&
+        document.getElementById("q2-answer").value.trim().length > 5 &&
+        document.getElementById("q3-answer").value.trim().length > 5 &&
+        document.getElementById("q4-answer").value.trim().length > 5;
+
+      const repoScore = setupCount === 3 && finalCount === 4 ? 20 : Math.round(((setupCount + finalCount) / 7) * 20);
+      const funcMethodScore = (appState.verifiedLessons.lesson1 ? 15 : 0) + (appState.verifiedLessons.lesson2 ? 15 : 0);
+      const moduleScore = appState.verifiedLessons.lesson3 ? 30 : 0;
+      const readmeScore = readmeOk ? 20 : 0;
+      const totalEstimatedScore = repoScore + funcMethodScore + moduleScore + readmeScore;
+
+      document.getElementById("receipt-modal-body").innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono">
+          <div><span class="text-slate-500">Student:</span> <span class="text-white font-bold">${s.rosterFormat}</span></div>
+          <div><span class="text-slate-500">ID Number:</span> <span class="text-indigo-300 font-bold">${s.idNumber}</span></div>
+          <div><span class="text-slate-500">Section:</span> <span class="text-indigo-300 font-bold">${s.section}</span></div>
+          <div><span class="text-slate-500">Recorded At:</span> <span class="text-emerald-300">${nowStr}</span></div>
+          <div class="sm:col-span-2"><span class="text-slate-500">GitHub URL:</span> <span class="text-sky-300 break-all">${repoUrl}</span></div>
+          <div><span class="text-slate-500">Completed Parts:</span> <span class="text-emerald-400 font-bold">${completed} / 6</span></div>
+          <div><span class="text-slate-500">Security Alerts:</span> <span class="text-rose-400 font-bold">${appState.violationCount}</span></div>
+        </div>
+        <div class="space-y-1.5 bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between mb-2">
+            <span class="font-bold text-white">Rubric Self-Assessment Summary:</span>
+            <span class="px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold">Checklist Score: ${totalEstimatedScore}% / 100%</span>
+          </div>
+          <div>• Repository Structure &amp; Filenames (20%): <span class="font-bold text-indigo-300">${repoScore}%</span> (${setupCount}/3 Setup, ${finalCount}/4 GitHub Checks)</div>
+          <div>• Lesson 1 (profileBuilder.js — 15%): <span class="font-bold ${appState.verifiedLessons.lesson1 ? "text-emerald-400" : "text-amber-400"}">${appState.verifiedLessons.lesson1 ? "Verified ✓ (15%)" : "Pending (0%)"}</span></div>
+          <div>• Lesson 2 (studentDirectory.js — 15%): <span class="font-bold ${appState.verifiedLessons.lesson2 ? "text-emerald-400" : "text-amber-400"}">${appState.verifiedLessons.lesson2 ? "Verified ✓ (15%)" : "Pending (0%)"}</span></div>
+          <div>• Lesson 3 (ES6 Modules &amp; Screenshot — 30%): <span class="font-bold ${appState.verifiedLessons.lesson3 ? "text-emerald-400" : "text-amber-400"}">${appState.verifiedLessons.lesson3 ? "Verified ✓ (30%)" : "Pending (0%)"}</span></div>
+          <div>• Part 3 (README.md Answer Sheet — 20%): <span class="font-bold ${readmeOk ? "text-emerald-400" : "text-amber-400"}">${readmeOk ? "Completed ✓ (20%)" : "Incomplete (0%)"}</span></div>
+        </div>
+      `;
+      document.getElementById("receipt-modal").classList.remove("hidden");
+    }
+
+    function closeReceiptModal() {
+      document.getElementById("receipt-modal").classList.add("hidden");
+    }
+
+    window.onload = function () {
+      updateClockAndEnforcement();
+      renderStepNav();
+    };
+  </script>
+</body>
+</html>
